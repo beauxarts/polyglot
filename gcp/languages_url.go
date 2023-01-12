@@ -3,10 +3,12 @@ package gcp
 import "net/url"
 
 const (
-	keyParam = "key"
+	targetParam = "target"
+	modelParam  = "model"
+	keyParam    = "key"
 )
 
-func LanguagesUrl(key string) *url.URL {
+func LanguagesUrl(target, model, key string) *url.URL {
 	if key == "" {
 		return nil
 	}
@@ -18,6 +20,12 @@ func LanguagesUrl(key string) *url.URL {
 	}
 
 	q := u.Query()
+	if target != "" {
+		q.Set(targetParam, target)
+	}
+	if model != "" {
+		q.Set(modelParam, model)
+	}
 	q.Set(keyParam, key)
 	u.RawQuery = q.Encode()
 

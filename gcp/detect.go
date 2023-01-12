@@ -7,27 +7,35 @@ import (
 	"net/http"
 )
 
-type DetectResp struct {
-	Data struct {
-		Detections [][]struct {
-			Confidence int    `json:"confidence"`
-			IsReliable bool   `json:"isReliable"`
-			Language   string `json:"language"`
-		} `json:"detections"`
-	} `json:"data"`
+type DetectRequest struct {
+	Query string `json:"q"`
 }
 
-func PostDetect(hc *http.Client, q string, key string) (*DetectResp, error) {
-	tr := &TranslateReq{Query: q}
+type DetectResponse struct {
+	Data DetectLanguageResponseList `json:"data"`
+}
 
-	req, err := json.Marshal(tr)
+type DetectLanguageResponseList struct {
+	Detections [][]DetectionsListValue `json:"detections"`
+}
+
+type DetectionsListValue struct {
+	Confidence int    `json:"confidence"`
+	IsReliable bool   `json:"isReliable"`
+	Language   string `json:"language"`
+}
+
+func Detect(hc *http.Client, query string, key string) ([]DetectionsListValue, error) {
+	treq := &DetectRequest{Query: query}
+
+	data, err := json.Marshal(treq)
 	if err != nil {
 		return nil, err
 	}
 
 	du := DetectUrl(key)
 
-	resp, err := hc.Post(du.String(), jsonContentType, bytes.NewReader(req))
+	resp, err := hc.Post(du.String(), jsonContentType, bytes.NewReader(data))
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
@@ -37,8 +45,8 @@ func PostDetect(hc *http.Client, q string, key string) (*DetectResp, error) {
 		return nil, errors.New(resp.Status)
 	}
 
-	var dr *DetectResp
+	var dr *DetectResponse
 	err = json.NewDecoder(resp.Body).Decode(&dr)
 
-	return dr, err
+	return dr.Data.Detections[0], err
 }

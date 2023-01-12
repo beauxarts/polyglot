@@ -7,31 +7,49 @@ import (
 	"net/http"
 )
 
-type TranslateReq struct {
-	Query  string `json:"q"`
-	Target string `json:"target,omitempty"`
+type TranslateRequest struct {
+	Query  []string `json:"q"`
+	Target string   `json:"target,omitempty"`
+	Format string   `json:"format,omitempty"`
+	Source string   `json:"source,omitempty"`
+	Model  string   `json:"model,omitempty"`
 }
 
-type TranslateResp struct {
-	Data struct {
-		Translations []struct {
-			TranslatedText         string `json:"translatedText"`
-			DetectedSourceLanguage string `json:"detectedSourceLanguage"`
-		} `json:"translations"`
-	} `json:"data"`
+type TranslateResponse struct {
+	Data TranslateTextResponseList `json:"data"`
 }
 
-func PostTranslate(hc *http.Client, q, targetLang, key string) (*TranslateResp, error) {
-	treq := &TranslateReq{Query: q, Target: targetLang}
+type TranslateTextResponseList struct {
+	Translations []TranslateTextResponseTranslation `json:"translations"`
+}
 
-	req, err := json.Marshal(treq)
+type TranslateTextResponseTranslation struct {
+	DetectedSourceLanguage string `json:"detectedSourceLanguage"`
+	Model                  string `json:"model"`
+	TranslatedText         string `json:"translatedText"`
+}
+
+func Translate(hc *http.Client, query []string, target string, format TranslateFormat, source, model, key string) ([]TranslateTextResponseTranslation, error) {
+	if len(query) > 128 {
+		return nil, errors.New("the maximum number of query strings is 128")
+	}
+
+	treq := &TranslateRequest{
+		Query:  query,
+		Target: target,
+		Format: string(format),
+		Source: source,
+		Model:  model,
+	}
+
+	data, err := json.Marshal(treq)
 	if err != nil {
 		return nil, err
 	}
 
 	tu := TranslateUrl(key)
 
-	resp, err := hc.Post(tu.String(), jsonContentType, bytes.NewReader(req))
+	resp, err := hc.Post(tu.String(), jsonContentType, bytes.NewReader(data))
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
@@ -41,8 +59,8 @@ func PostTranslate(hc *http.Client, q, targetLang, key string) (*TranslateResp, 
 		return nil, errors.New(resp.Status)
 	}
 
-	var tresp *TranslateResp
+	var tresp *TranslateResponse
 	err = json.NewDecoder(resp.Body).Decode(&tresp)
 
-	return tresp, err
+	return tresp.Data.Translations, err
 }
