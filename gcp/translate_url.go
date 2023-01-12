@@ -2,13 +2,6 @@ package gcp
 
 import "net/url"
 
-type TranslateFormat string
-
-const (
-	HTML TranslateFormat = "html"
-	Text TranslateFormat = "text"
-)
-
 func TranslateUrl(key string) *url.URL {
 	if key == "" {
 		return nil
