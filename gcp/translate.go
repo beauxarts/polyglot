@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/beauxarts/polyglot"
 	"net/http"
 )
 
@@ -29,7 +30,7 @@ type TranslateTextResponseTranslation struct {
 	TranslatedText         string `json:"translatedText"`
 }
 
-func Translate(hc *http.Client, query []string, target string, format TranslateFormat, source, model, key string) ([]TranslateTextResponseTranslation, error) {
+func Translate(hc *http.Client, query []string, target string, format polyglot.TranslateFormat, source, model, key string) ([]TranslateTextResponseTranslation, error) {
 	if len(query) > 128 {
 		return nil, errors.New("the maximum number of query strings is 128")
 	}
