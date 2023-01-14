@@ -54,7 +54,7 @@ func (t *Translator) Detect(content string) (string, error) {
 	return "", nil
 }
 
-func (t *Translator) Translate(target, source string, format polyglot.TranslateFormat, query ...string) ([]string, error) {
+func (t *Translator) Translate(source, target string, format polyglot.TranslateFormat, query ...string) ([]string, error) {
 
 	tresp, err := Translate(t.httpClient, query, target, format, source, t.model, t.key)
 	if err != nil {
