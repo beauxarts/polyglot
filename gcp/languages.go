@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	jsonContentType          = "Content-Type: application/json"
 	NeuralMachineTranslation = "nmt"
 )
 

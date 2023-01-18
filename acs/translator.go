@@ -1,4 +1,4 @@
-package gcp
+package acs
 
 import (
 	"errors"
@@ -8,33 +8,31 @@ import (
 
 type Translator struct {
 	httpClient *http.Client
-	model      string
 	key        string
 }
 
-func NewTranslator(hc *http.Client, model, key string) (polyglot.Translator, error) {
+func NewTranslator(hc *http.Client, key string) (polyglot.Translator, error) {
 	if key == "" {
 		return nil, errors.New("key is required")
 	}
 
 	return &Translator{
 		httpClient: hc,
-		model:      model,
 		key:        key,
 	}, nil
 }
 
 func (t *Translator) Languages(language string) (map[string]string, error) {
 
-	lr, err := Languages(t.httpClient, language, t.model, t.key)
+	lr, err := TranslationLanguages(t.httpClient, language)
 	if err != nil {
 		return nil, err
 	}
 
 	langName := make(map[string]string)
 
-	for _, ln := range lr {
-		langName[ln.Language] = ln.Name
+	for lc, ln := range lr.Translation {
+		langName[lc] = ln.Name
 	}
 
 	return langName, nil
@@ -42,29 +40,26 @@ func (t *Translator) Languages(language string) (map[string]string, error) {
 
 func (t *Translator) Detect(content string) (string, error) {
 
-	dlv, err := Detect(t.httpClient, content, t.key)
+	dr, err := Detect(t.httpClient, content, t.key)
 	if err != nil {
 		return "", err
 	}
 
-	if len(dlv) > 0 {
-		return dlv[0].Language, nil
-	}
-
-	return "", nil
+	return dr.Language, nil
 }
 
 func (t *Translator) Translate(source, target string, format polyglot.TranslateFormat, query ...string) ([]string, error) {
 
-	tresp, err := Translate(t.httpClient, query, target, format, source, t.model, t.key)
+	tr, err := Translate(t.httpClient, query, source, target, format, t.key)
 	if err != nil {
 		return nil, err
 	}
 
-	translations := make([]string, 0, len(tresp))
-
-	for _, tr := range tresp {
-		translations = append(translations, tr.TranslatedText)
+	translations := make([]string, len(tr))
+	for i, translation := range tr {
+		if len(translation.Translations) > 0 {
+			translations[i] = translation.Translations[0].Text
+		}
 	}
 
 	return translations, nil

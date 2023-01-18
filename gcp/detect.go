@@ -26,16 +26,16 @@ type DetectionsListValue struct {
 }
 
 func Detect(hc *http.Client, query string, key string) ([]DetectionsListValue, error) {
-	treq := &DetectRequest{Query: query}
+	dreq := &DetectRequest{Query: query}
 
-	data, err := json.Marshal(treq)
+	data, err := json.Marshal(dreq)
 	if err != nil {
 		return nil, err
 	}
 
 	du := DetectUrl(key)
 
-	resp, err := hc.Post(du.String(), jsonContentType, bytes.NewReader(data))
+	resp, err := hc.Post(du.String(), applicationJsonContentType, bytes.NewReader(data))
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err

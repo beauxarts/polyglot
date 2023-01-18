@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+const (
+	applicationJsonContentType = "application/json"
+)
+
 type TranslateRequest struct {
 	Query  []string `json:"q"`
 	Target string   `json:"target,omitempty"`
@@ -50,7 +54,7 @@ func Translate(hc *http.Client, query []string, target string, format polyglot.T
 
 	tu := TranslateUrl(key)
 
-	resp, err := hc.Post(tu.String(), jsonContentType, bytes.NewReader(data))
+	resp, err := hc.Post(tu.String(), applicationJsonContentType, bytes.NewReader(data))
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
